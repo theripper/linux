@@ -163,6 +163,12 @@ config ARCH_MESON64_ODROIDC2
           This enables support for the board ODROID-C2 of Hardkernel
           which is based on ARMv8 SoC of AMLogic, Inc.
 
+config ARCH_MESON64_WETEK
+        bool "Wetek's boards"
+        help
+          This enables support for the boards of Wetek
+          which is based on ARMv8 SoC of AMLogic, Inc.
+
 endmenu
 
 menu "Bus support"

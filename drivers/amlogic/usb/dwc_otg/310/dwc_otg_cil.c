@@ -1289,6 +1289,7 @@ void dwc_otg_core_init(dwc_otg_core_if_t *core_if)
 
 			/* Reset after a PHY select */
 			dwc_otg_core_reset(core_if);
+			dwc_mdelay(USB_CORE_RESET_TIME);
 		}
 
 		/* Program DCFG.DevSpd or HCFG.FSLSPclkSel to 48Mhz in FS.      Also
@@ -1342,6 +1343,7 @@ void dwc_otg_core_init(dwc_otg_core_if_t *core_if)
 			DWC_WRITE_REG32(&global_regs->gusbcfg, usbcfg.d32);
 			/* Reset after setting the PHY parameters */
 			dwc_otg_core_reset(core_if);
+			dwc_mdelay(USB_CORE_RESET_TIME);
 		}
 	}
 

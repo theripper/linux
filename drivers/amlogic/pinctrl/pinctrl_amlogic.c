@@ -895,7 +895,7 @@ static int meson_gpio_set_pullup_down(struct gpio_chip *chip,
 	return 0;
 }
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	#define	AMLGPIO_IRQ_MAX	8
 
 	unsigned int meson_irq_desc[AMLGPIO_IRQ_MAX] = { 0, };
@@ -917,7 +917,7 @@ static int meson_gpio_to_irq(struct gpio_chip *chip,
 	/*set trigger type*/
 	struct meson_domain *domain = to_meson_domain(chip);
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	if (meson_irq_desc[irq_bank])	{
 		pr_err("ERROR(%s) : already allocation irq bank!!\n",
 							 __func__);
@@ -943,14 +943,14 @@ static int meson_gpio_to_irq(struct gpio_chip *chip,
 	regmap_update_bits(int_reg,  (GPIO_FILTER_NUM*4),
 			0x7<<start_bit, filter<<start_bit);
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	meson_irq_desc[irq_bank] = gpio;
 #endif
 
 	return 0;
 }
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 
 #include <linux/interrupt.h>
 
@@ -1080,7 +1080,7 @@ static int meson_gpiolib_register(struct amlogic_pmx  *pc)
 		domain->chip.set = meson_gpio_set;
 		domain->chip.set_pullup_down = meson_gpio_set_pullup_down;
 		domain->chip.set_gpio_to_irq = meson_gpio_to_irq;
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 		domain->chip.to_irq = meson_to_irq;
 #endif
 		domain->chip.base = -1;

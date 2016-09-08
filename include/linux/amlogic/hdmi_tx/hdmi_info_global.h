@@ -336,7 +336,7 @@ struct hdmitx_info {
 	/* ------------------------------------------------------- */
 };
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 #define VOUTMODE_HDMI           0x00
 #define VOUTMODE_DVI            0x01
 #define VOUTMODE_VGA            0x02

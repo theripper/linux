@@ -513,7 +513,7 @@ static int set_disp_mode_auto(void)
 	if ((vic_ready != HDMI_Unkown) && (vic_ready == vic)) {
 		hdmi_print(IMP, SYS "[%s] ALREADY init VIC = %d\n",
 			__func__, vic);
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 		if (hdmitx_device.RXCap.IEEEOUI == 0 || odroidc_voutmode()) {
 #else
 		if (hdmitx_device.RXCap.IEEEOUI == 0) {
@@ -1664,7 +1664,9 @@ static int hdmi_task_handle(void *data)
 	INIT_WORK(&hdmitx_device->work_internal_intr,
 		hdmitx_internal_intr_handler);
 
-	/*hdmitx_device->tx_aud_cfg = 1;*/ /* default audio configure is on */
+#ifndef (CONFIG_ARCH_MESON64_ODROIDC2)
+	hdmitx_device->tx_aud_cfg = 1; /* default audio configure is on */
+#endif
 	if (init_flag & INIT_FLAG_POWERDOWN) {
 		/* power down */
 		hdmitx_device->HWOp.SetDispMode(hdmitx_device, NULL);

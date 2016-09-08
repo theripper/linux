@@ -419,7 +419,7 @@ static irqreturn_t gpio_sysfs_irq(int irq, void *priv)
 	return IRQ_HANDLED;
 }
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	#include <linux/amlogic/pinctrl_amlogic.h>
 	/* AMLogic GPIO irq bank start offset */
 	#define	AMLGPIO_IRQ_BASE	96
@@ -431,7 +431,7 @@ static int gpio_setup_irq(struct gpio_desc *desc, struct device *dev,
 	struct kernfs_node	*value_sd;
 	unsigned long		irq_flags;
 	int			ret, irq, id;
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	int			irq_banks[2] = {0, };
 #endif
 	if ((desc->flags & GPIO_TRIGGER_MASK) == gpio_flags)
@@ -444,7 +444,7 @@ static int gpio_setup_irq(struct gpio_desc *desc, struct device *dev,
 	id = desc->flags >> ID_SHIFT;
 	value_sd = idr_find(&dirent_idr, id);
 	if (value_sd)	{
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 		meson_free_irq(irq, &irq_banks[0]);
 
 		/* rising irq bank */
@@ -496,7 +496,7 @@ static int gpio_setup_irq(struct gpio_desc *desc, struct device *dev,
 		}
 	}
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	ret = meson_setup_irq(desc->chip, irq, irq_flags, &irq_banks[0]);
 
 	if (ret < 0)

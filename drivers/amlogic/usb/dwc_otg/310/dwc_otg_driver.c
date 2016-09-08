@@ -1085,6 +1085,9 @@ static int dwc_otg_driver_probe(struct platform_device *pdev)
 
 	pcore_para = &dwc_otg_module_params;
 
+	if (force_device_mode && (port_index == 0))
+		port_type = USB_PORT_TYPE_SLAVE;
+
 	if (port_type == USB_PORT_TYPE_HOST)
 		pcore_para->host_only = 1;
 	else

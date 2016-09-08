@@ -193,7 +193,7 @@ static inline struct meson_domain *to_meson_domain(struct gpio_chip *chip)
 
 extern struct amlogic_pmx *gl_pmx;
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	int meson_setup_irq(struct gpio_chip *chip, unsigned int gpio,
 				unsigned int irq_flags, int *irq_banks);
 	int meson_fix_irqbank(int bank);

@@ -200,7 +200,7 @@ static int refresh_mode_and_logo(bool first)
 {
 	enum vmode_e cur_mode = VMODE_MAX;
 	int cnt = sizeof(mode_infos) / sizeof(mode_infos[0]);
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	int hdp_state = 1;
 #else
 	int hdp_state = get_hpd_state();

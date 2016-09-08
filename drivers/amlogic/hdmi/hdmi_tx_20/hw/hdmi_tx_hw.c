@@ -134,7 +134,7 @@ static int hdmitx_cntl_misc(struct hdmitx_dev *hdev, unsigned cmd,
 static void digital_clk_on(unsigned char flag);
 static void digital_clk_off(unsigned char flag);
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 static int dvi_mode = VOUTMODE_HDMI;
 
 int odroidc_voutmode(void)
@@ -2131,7 +2131,7 @@ static int hdmitx_set_dispmode(struct hdmitx_dev *hdev,
 	mdelay(1);
 	hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 1, 3, 1);
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	hdmitx_hdmi_dvi_config(hdev, odroidc_voutmode() != VOUTMODE_HDMI);
 #endif
 

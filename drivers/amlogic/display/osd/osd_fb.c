@@ -276,7 +276,7 @@ static struct fb_fix_screeninfo fb_def_fix = {
 	.accel      = FB_ACCEL_NONE,
 };
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 static int monitor_onoff_flag;
 #endif
 
@@ -300,7 +300,7 @@ static phys_addr_t fb_rmem_paddr[2];
 static void __iomem *fb_rmem_vaddr[2];
 static u32 fb_rmem_size[2];
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 static int osd_set_res_bootargs(int index, enum vmode_e mode)
 {
 	struct hdmi_cea_timing *custom_timing = get_custom_timing();
@@ -836,7 +836,7 @@ static int osd_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg)
 	case FBIOPUT_OSD_WINDOW_AXIS:
 		ret = copy_from_user(&osd_dst_axis, argp, 4 * sizeof(s32));
 		break;
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2) && defined(CONFIG_UMP)
+#if (defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)) && defined(CONFIG_UMP)
 	case GET_UMP_SECURE_ID_BUF1:
 		return disp_get_ump_secure_id(info, fbdev, arg, 0);
 		break;
@@ -1084,7 +1084,7 @@ static int osd_open(struct fb_info *info, int arg)
 int osd_blank(int blank_mode, struct fb_info *info)
 {
 	osd_enable_hw(info->node, (blank_mode != 0) ? 0 : 1);
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 	if (!monitor_onoff_flag)
 		return 0;
 
@@ -2135,7 +2135,7 @@ static inline int install_osd_reverse_info(struct osd_info_s *init_osd_info,
 	return 0;
 }
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 static int __init osd_setup_monitor_onoff(char *str)
 {
 	if (!strcmp(str, "true") || !strcmp(str, "1"))
@@ -2458,7 +2458,7 @@ static int osd_probe(struct platform_device *pdev)
 			if (ret)
 				osd_log_info("not found display_size_default\n");
 			else {
-#if !defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if !defined(CONFIG_ARCH_MESON64_ODROIDC2) || !defined(CONFIG_ARCH_MESON64_WETEK)
 				fb_def_var[index].xres = var_screeninfo[0];
 				fb_def_var[index].yres = var_screeninfo[1];
 				fb_def_var[index].xres_virtual =
