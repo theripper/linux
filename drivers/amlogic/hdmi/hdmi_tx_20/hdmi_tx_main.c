@@ -1664,7 +1664,7 @@ static int hdmi_task_handle(void *data)
 	INIT_WORK(&hdmitx_device->work_internal_intr,
 		hdmitx_internal_intr_handler);
 
-#ifndef (CONFIG_ARCH_MESON64_ODROIDC2)
+#ifndef CONFIG_ARCH_MESON64_ODROIDC2
 	hdmitx_device->tx_aud_cfg = 1; /* default audio configure is on */
 #endif
 	if (init_flag & INIT_FLAG_POWERDOWN) {

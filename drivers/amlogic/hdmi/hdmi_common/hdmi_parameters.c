@@ -1252,7 +1252,7 @@ static struct hdmi_format_para fmt_para_vesa_3440x1440p60_43x18 = {
 	},
 };
 
-#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2) || defined(CONFIG_ARCH_MESON64_WETEK)
 static struct hdmi_format_para fmt_para_custombuilt = {
 	.vic = HDMIV_CUSTOMBUILT,
 	.name = "custombuilt",
