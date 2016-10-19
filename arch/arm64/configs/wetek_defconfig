@@ -1282,7 +1282,7 @@ CONFIG_GXBB_POWER_RESET=y
 #
 # Amlogic Bt Rfkill Driver
 #
-# CONFIG_BT_DEVICE is not set
+CONFIG_BT_DEVICE=y
 
 #
 # Amlogic ion video support
