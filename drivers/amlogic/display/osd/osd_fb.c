@@ -212,11 +212,11 @@ static struct fb_var_screeninfo fb_def_var[] = {
 		.yoffset         = 0,
 		.bits_per_pixel = 32,
 		.grayscale       = 0,
-		.red             = {0, 0, 0},
-		.green           = {0, 0, 0},
-		.blue            = {0, 0, 0},
-		.transp          = {0, 0, 0},
-		.nonstd          = 0,
+		.red             = {16, 8, 0},
+		.green           = {8, 8, 0},
+		.blue            = {0, 8, 0},
+		.transp          = {24, 0, 0},
+		.nonstd          = 1,
 		.activate        = FB_ACTIVATE_NOW,
 		.height          = -1,
 		.width           = -1,
@@ -845,8 +845,6 @@ static int osd_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg)
 		break;
 #endif
 	default:
-		osd_log_err("command 0x%x not supported (%s)\n",
-				cmd, current->comm);
 		return -1;
 	}
 	mutex_lock(&fbdev->lock);
