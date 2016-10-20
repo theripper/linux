@@ -330,8 +330,6 @@
                dev_name = "wifi_power";
                status = "okay";
                power_gpio =  <&gpio       GPIOX_6       GPIO_ACTIVE_HIGH>;
-               wifi_led =  <&gpio       GPIODV_26       GPIO_ACTIVE_HIGH>;
-               eth_led =  <&gpio       GPIODV_27       GPIO_ACTIVE_HIGH>;
        };
 
     sd{
@@ -705,6 +703,8 @@
 		status = "okay";
 		led_gpio = <&gpio_ao  GPIOAO_13  GPIO_ACTIVE_HIGH>;
 		led_active_low = <1>;
+		wifi_gpio =  <&gpio       GPIODV_26       GPIO_ACTIVE_LOW>;	
+ 		eth_gpio =  <&gpio       GPIODV_27       GPIO_ACTIVE_LOW>;		
 	};
 
 

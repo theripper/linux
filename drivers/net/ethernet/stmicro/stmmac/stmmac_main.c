@@ -59,6 +59,12 @@
 #endif
 #include <linux/reset.h>
 
+#ifdef CONFIG_LEDS_TRIGGER_NETWORK
+#include <linux/leds.h>
+extern void ledtrig_eth_linkup(struct led_classdev *led_cdev);
+extern void ledtrig_eth_linkdown(struct led_classdev *led_cdev);
+#endif
+
 #define STMMAC_ALIGN(x)	L1_CACHE_ALIGN(x)
 
 void __iomem *PREG_ETH_REG0;
@@ -688,6 +694,13 @@ static void stmmac_adjust_link(struct net_device *dev)
 		return;
 
 	spin_lock_irqsave(&priv->lock, flags);
+
+#ifdef CONFIG_LEDS_TRIGGER_NETWORK
+	if (phydev->link)	
+		ledtrig_eth_linkup(NULL);
+	else
+		ledtrig_eth_linkdown(NULL);
+#endif
 
 	if (phydev->link) {
 		u32 ctrl = readl(priv->ioaddr + MAC_CTRL_REG);

@@ -44,6 +44,56 @@
 #define ERR(format,  arg...) pr_err("%s: "  format, __func__ , ## arg)
 #endif
 
+#ifdef CONFIG_LEDS_TRIGGER_NETWORK
+
+#define GPIO_OWNER_WIFILED "WIFILED"
+#define GPIO_OWNER_ETHLED "ETHLED"
+
+int wifiLedGpio = -1;
+int ethLedGpio = -1;
+
+static void wetekplay_wifiled_set(struct led_classdev *cdev,
+			  enum led_brightness brightness)
+{
+	if (wifiLedGpio > 0)
+		gpio_direction_output(wifiLedGpio, brightness > 0 ? 1 : 0);
+}
+
+static enum led_brightness wetekplay_wifiled_get(struct led_classdev *cdev)
+{
+	if (wifiLedGpio > 0 && gpio_get_value(wifiLedGpio))
+	    return 255;
+	else
+	    return 0;
+}
+static void wetekplay_ethled_set(struct led_classdev *cdev,
+			  enum led_brightness brightness)
+{
+	if (ethLedGpio > 0)
+		gpio_direction_output(ethLedGpio, brightness > 0 ? 1 : 0);
+}
+
+static enum led_brightness wetekplay_ethled_get(struct led_classdev *cdev)
+{
+	if (ethLedGpio > 0 && gpio_get_value(ethLedGpio))
+	    return 255;
+	else
+	    return 0;
+}
+static struct led_classdev wetekplay_wifiled = {
+	.name = "wetek:blue:wifiled",
+	.brightness_set = wetekplay_wifiled_set,
+	.brightness_get = wetekplay_wifiled_get,
+	.default_trigger = "wifilink",
+};
+
+static struct led_classdev wetekplay_ethled = {
+	.name = "wetek:blue:ethled",
+	.brightness_set = wetekplay_ethled_set,
+	.brightness_get = wetekplay_ethled_get,
+	.default_trigger = "ethlink",
+};
+#endif
 
 static void aml_sysled_work(struct work_struct *work)
 {
@@ -108,6 +158,30 @@ static int aml_sysled_dt_parse(struct platform_device *pdev)
 	}
 	INFO("active_low = %u\n", val);
 	ldev->d.active_low = !!val;
+#ifdef CONFIG_LEDS_TRIGGER_NETWORK
+	{
+		int ret;
+		const char *str;
+		
+		ret = of_property_read_string(node,
+			"eth_gpio", &str);
+		if (!ret) {
+			desc = of_get_named_gpiod_flags(node,
+				"eth_gpio", 0, NULL);
+			ethLedGpio = desc_to_gpio(desc);
+			gpio_request(ethLedGpio, GPIO_OWNER_ETHLED);
+		}
+		
+		ret = of_property_read_string(node,
+			"wifi_gpio", &str);
+		if (!ret) {						
+			desc = of_get_named_gpiod_flags(node,
+				"wifi_gpio", 0, NULL);
+			wifiLedGpio = desc_to_gpio(desc);
+			gpio_request(wifiLedGpio, GPIO_OWNER_WIFILED);
+		}
+	}
+#endif	
 	return 0;
 }
 
@@ -150,6 +224,15 @@ static int aml_sysled_probe(struct platform_device *pdev)
 		kfree(ldev);
 		return ret;
 	}
+#ifdef CONFIG_LEDS_TRIGGER_NETWORK	
+	led_classdev_register(&pdev->dev, &wetekplay_wifiled);
+	led_classdev_register(&pdev->dev, &wetekplay_ethled);
+	
+	if (ethLedGpio > 0)
+		gpio_direction_output(ethLedGpio, 0);
+	if (wifiLedGpio > 0)
+		gpio_direction_output(wifiLedGpio, 0);
+#endif	
 
 	INFO("module probed ok\n");
 	return 0;
@@ -165,6 +248,10 @@ static int __exit aml_sysled_remove(struct platform_device *pdev)
 	gpio_free(ldev->d.pin);
 	platform_set_drvdata(pdev, NULL);
 	kfree(ldev);
+#ifdef CONFIG_LEDS_TRIGGER_NETWORK	
+	led_classdev_unregister(&wetekplay_wifiled);
+	led_classdev_unregister(&wetekplay_ethled);
+#endif	
 	return 0;
 }
 
