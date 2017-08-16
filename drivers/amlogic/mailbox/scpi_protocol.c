@@ -133,6 +133,7 @@ static int high_priority_cmds[] = {
 #define DVFS_COUNT_MAX		13
 #define DVFS_COUNT_1536		6
 static unsigned long max_freq_dvfs;
+static unsigned char dvfs_vcck;
 #endif
 
 static struct scpi_opp *scpi_opps[MAX_DVFS_DOMAINS];
@@ -283,6 +284,14 @@ struct scpi_opp *scpi_dvfs_get_opps(u8 domain)
 	if (scpi_opps[domain])	/* data already populated */
 		return scpi_opps[domain];
 
+#if defined(CONFIG_ARCH_MESON64_ODROIDC2)
+	/*
+	 * 1. default dvfs table has max 1.536GHz with domain '0'
+	 * 2. set the 7th bit to support flexible dvfs table to 2.016GHz
+	 */
+	domain |= 0x80;
+#endif
+
 	SCPI_SETUP_DBUF(sdata, mdata, SCPI_CL_DVFS,
 			SCPI_CMD_GET_DVFS_INFO, domain, buf);
 	ret = scpi_execute_cmd(&sdata);
@@ -367,6 +376,9 @@ int scpi_dvfs_set_idx(u8 domain, u8 idx)
 
 	buf.dvfs_idx = idx;
 	buf.dvfs_domain = domain;
+
+	if (dvfs_vcck)
+		buf.dvfs_domain |= 0x80;
 
 	if (domain >= MAX_DVFS_DOMAINS)
 		return -EINVAL;
@@ -468,4 +480,22 @@ static int __init get_max_freq(char *str)
 	return 0;
 }
 __setup("max_freq=", get_max_freq);
+
+static int __init get_dvfs_vcck(char *str)
+{
+	if (NULL == str) {
+		dvfs_vcck = 0;
+		return -EINVAL;
+	}
+
+	if (!strcmp(str, "true") || !strcmp(str, "1"))
+		dvfs_vcck = 1;
+	else
+		dvfs_vcck = 0;
+
+	pr_info("[%s] dvfs_vcck : %d\n", __func__, dvfs_vcck);
+
+	return 0;
+}
+__setup("dvfs_vcck=", get_dvfs_vcck);
 #endif

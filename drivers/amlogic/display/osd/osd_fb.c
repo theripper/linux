@@ -2326,6 +2326,7 @@ static int osd_probe(struct platform_device *pdev)
 	int  index, bpp;
 	struct osd_fb_dev_s *fbdev = NULL;
 	enum vmode_e current_mode = VMODE_MASK;
+	enum vmode_e initial_mode = VMODE_MASK;
 	enum vmode_e logo_mode = VMODE_MASK;
 	int logo_index = -1;
 	const void *prop;
@@ -2406,9 +2407,15 @@ static int osd_probe(struct platform_device *pdev)
 	logo_mode = get_logo_vmode();
 	logo_index = osd_get_logo_index();
 	if (logo_mode >= VMODE_MAX) {
-		if (current_mode < VMODE_MASK)
+		initial_mode = get_initial_vmode();
+		if (initial_mode < VMODE_MAX) {
+			current_mode = initial_mode;
 			set_current_vmode(current_mode);
+		}
 		osd_init_hw(0);
+		if (current_mode < VMODE_MAX)
+			vout_notifier_call_chain(VOUT_EVENT_MODE_CHANGE,
+				&current_mode);
 	}
 
 	vinfo = get_current_vinfo();
@@ -2471,9 +2478,6 @@ static int osd_probe(struct platform_device *pdev)
 					fb_def_var[index].bits_per_pixel = 32;
 
 #else /* CONFIG_ARCH_MESON64_ODROIDC2 */
-
-				if (current_mode != logo_mode)
-					current_mode = logo_mode;
 
 				if (osd_set_res_bootargs(index, current_mode)) {
 					fb_def_var[index].xres =

@@ -1581,7 +1581,11 @@ void mmc_power_off(struct mmc_host *host)
 
 	mmc_host_clk_hold(host);
 
+#ifndef CONFIG_ARCH_MESON64_ODROIDC2
 	host->ios.clock = 0;
+#else
+	host->ios.clock = 400000;
+#endif
 	host->ios.vdd = 0;
 
 	if (!mmc_host_is_spi(host)) {

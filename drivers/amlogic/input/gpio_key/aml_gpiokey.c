@@ -48,6 +48,13 @@
 #include <dt-bindings/gpio/gxbb.h>
 
 #include <linux/switch.h>
+
+#include <linux/amlogic/iomap.h>
+#define AO_BASE				0xc8100000
+#define AO_DEBUG_REG0 ((0x00 << 10) | (0x28 << 2))
+
+static unsigned long gpiopower;
+
 #define OFFSET  24
 
 #define MOD_NAME       "gpio_key"
@@ -67,6 +74,7 @@ struct gpio_platform_data {
 	int repeat_period;
 	int irq_keyup;
 	int irq_keydown;
+	void __iomem *ao_reg;
 };
 
 struct kp {
@@ -98,6 +106,7 @@ static void kp_work(struct kp *kp)
 	struct gpio_key *key;
 	int i;
 	int io_status;
+
 	key = kp->keys;
 	for (i = 0; i < kp->key_num; i++) {
 		io_status = gpiod_get_value(gpio_to_desc(key->pin));
@@ -151,6 +160,22 @@ void clr_pwr_key(void)
 	/*aml_set_reg32_mask(P_AO_IRQ_STAT_CLR , 1<<8);*/
 }
 
+static int __init gpiopower_setup(char *str)
+{
+	int ret;
+
+	if (NULL == str) {
+		gpiopower = 0;
+		return -EINVAL;
+	}
+
+	ret = kstrtoul(str, 0 , &gpiopower);
+
+	pr_info(MOD_NAME "- %s gpiopower : %ld\n", __func__, gpiopower);
+
+	return 0;
+}
+__setup("gpiopower=", gpiopower_setup);
 
 #ifdef USE_IRQ
 
@@ -174,6 +199,7 @@ void kp_timer_sr(unsigned long data)
 	mod_timer(&kp_data->timer , jiffies+msecs_to_jiffies(25));
 }
 #endif
+
 static int gpio_key_config_open(struct inode *inode ,  struct file *file)
 {
 	file->private_data = gp_kp;
@@ -224,8 +250,13 @@ static int gpio_key_probe(struct platform_device *pdev)
 	int irq_keyup;
 	int irq_keydown;
 #endif
+	struct resource *res;
+	resource_size_t *base;
 
 	int gpio_highz = 0;
+	unsigned int val;
+
+	pr_info(MOD_NAME "- %s\n", __func__);
 
 	if (!pdev->dev.of_node) {
 		dev_info(&pdev->dev, "gpio_key: pdev->dev.of_node == NULL!\n");
@@ -300,26 +331,46 @@ static int gpio_key_probe(struct platform_device *pdev)
 
 #endif
 
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (res) {
+		base = ioremap(res->start, res->end - res->start);
+		pdata->ao_reg = (void *)base;
+	} else {
+		dev_info(&pdev->dev, "no AO Reg resource\n");
+		pdata->ao_reg = NULL;
+	}
+
 	for (i = 0; i < key_size; i++) {
-		ret = of_property_read_string_index(pdev->dev.of_node ,
-			"key_pin" , i , &str);
-		dev_info(&pdev->dev, "gpio_key: %d name(%s) pin(%s)\n",
-			 i, (pdata->key[i].name), str);
-		if (ret < 0) {
-			dev_info(&pdev->dev,
-				 "gpio_key: find key_name=%d finished\n", i);
-			break;
+		if (gpiopower) {
+			pdata->key[i].pin = gpiopower;
+
+			val = readl((pdata->ao_reg + AO_DEBUG_REG0));
+			val |= (gpiopower << 16);
+			writel(val, (pdata->ao_reg + AO_DEBUG_REG0));
+		} else {
+
+			ret = of_property_read_string_index(pdev->dev.of_node ,
+				"key_pin" , i , &str);
+			if (ret < 0) {
+				dev_info(&pdev->dev,
+					"gpio_key: find key_name=%d fail\n", i);
+				goto get_key_param_failed;
+			}
+			dev_info(&pdev->dev, "gpio_key: %d name(%s) pin(%s)\n",
+				 i, (pdata->key[i].name), str);
+
+			ret = amlogic_gpio_name_map_num(pdev , str);
+			dev_info(&pdev->dev, "amlogic_gpio_name_map_num pin %d!%s::\n",
+				 ret , str);
+			if (ret < 0) {
+				dev_info(&pdev->dev, "gpio_key bad pin !\n");
+				goto get_key_param_failed;
+			}
+			desc = of_get_named_gpiod_flags(pdev->dev.of_node ,
+				"key_pin" ,  0 ,  NULL);
+			pdata->key[i].pin = desc_to_gpio(desc);
 		}
-		ret = amlogic_gpio_name_map_num(pdev , str);
-		dev_info(&pdev->dev, "amlogic_gpio_name_map_num pin %d!%s::\n",
-			 ret , str);
-		if (ret < 0) {
-			dev_info(&pdev->dev, "gpio_key bad pin !\n");
-			goto get_key_param_failed;
-		}
-		desc = of_get_named_gpiod_flags(pdev->dev.of_node ,
-			"key_pin" ,  0 ,  NULL);
-		pdata->key[i].pin = desc_to_gpio(desc);
+
 		dev_info(&pdev->dev, "gpio_key: %d %s(%d)\n", i,
 			 (pdata->key[i].name) ,  pdata->key[i].pin);
 		/*pdata->key[i].pin = ret;*/

@@ -46,9 +46,6 @@ static unsigned int sd_emmc_err_bak;
 #ifdef SD_EMMC_DATA_TASKLET
 struct tasklet_struct sd_emmc_finish_tasklet;
 #endif
-#ifdef CALIBRATION
-u32 sd_emmc_version[2] = {0x2015, 0x1001};
-#endif
 static void aml_sd_emmc_set_clk_rate(struct mmc_host *mmc,
 					unsigned int clk_ios);
 /*for multi host claim host*/
@@ -163,16 +160,6 @@ int aml_buf_verify(int *buf, int blocks, int lba)
 	return 0;
 }
 #endif
-#ifdef CALIBRATION
-u32 checksum_cali(u32 *buffer, u32 length)
-{
-	u32 sum = 0, *i = buffer;
-	buffer += length;
-	for (; i < buffer; sum += *(i++))
-		;
-	return sum;
-}
-#endif
 
 #ifdef CALIBRATION
 u8 cal_i, cal_j;
@@ -202,8 +189,6 @@ static int aml_sd_emmc_execute_tuning_index(struct mmc_host *mmc, u32 opcode,
 	u8 first_flag;
 	u8 cal_per_line_num = 5;
 	u8 calout_cmp_num = 0;
-	u32 write_buf[128] = {0};
-	u8 err = 0;
 	u8 bus_width = 8;
 	sd_emmc_regs->gdelay = 0;
 	line_delay = sd_emmc_regs->gdelay;
@@ -334,16 +319,6 @@ static int aml_sd_emmc_execute_tuning_index(struct mmc_host *mmc, u32 opcode,
 
 	sd_emmc_regs->gdelay = line_delay;
 	host->is_tunning = 0;
-	write_buf[0] = sd_emmc_version[0];
-	write_buf[1] = sd_emmc_version[1];
-	write_buf[2] = line_delay;
-	write_buf[3] = checksum_cali(write_buf, 3);
-	err = mmc_write_internal(mmc->card, record_blk, 1, write_buf);
-	if (err != 0) {
-		pr_info("%s: mmc write tuning result err\n",
-				mmc_hostname(mmc));
-		err = 0;
-	}
 	kfree(blk_test);
 	return 0;
 }
@@ -565,7 +540,6 @@ static int aml_sd_emmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 	int start_blk = -1;
 	u32 clk_temp = sd_emmc_regs->gclock;
 	u32 clk_rate = 1000000000;
-	u32 *read_buf;
 	if (opcode == MMC_SEND_TUNING_BLOCK_HS200) {
 		if (mmc->ios.bus_width == MMC_BUS_WIDTH_8) {
 			tuning_data.blk_pattern = tuning_blk_pattern_8bit;
@@ -587,11 +561,6 @@ static int aml_sd_emmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 
 #ifdef CALIBRATION
 	if ((aml_card_type_mmc(pdata)) && (pdata->need_cali == 1)) {
-		read_buf = kmalloc(512, GFP_KERNEL);
-		if (!read_buf)
-			pr_err("%s: read buffer malloc failed\n",
-					mmc_hostname(mmc));
-		memset(read_buf, 0, 512);
 		start_blk = get_reserve_partition_off(mmc->card);
 		bit = mmc->card->csd.read_blkbits;
 		if (start_blk < 0) {
@@ -610,34 +579,10 @@ static int aml_sd_emmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 			start_blk += 0x6000;
 
 		aml_sd_emmc_set_clk_rate(mmc, 50000000);
-		err = mmc_read_internal(mmc->card, start_blk,
-					1, read_buf);
-			if (err != 0) {
-				pr_info("%s: read tuning result failed,",
-						mmc_hostname(mmc));
-				pr_info("continue...\n");
-			}
-			if ((read_buf[0] == sd_emmc_version[0])
-				&& (read_buf[1] == sd_emmc_version[1])) {
-				if (checksum_cali(read_buf, 3) ==
-						read_buf[3]) {
-					pdata->need_cali = 0;
-				} else {
-					pdata->need_cali = 1;
-					pr_info("%s:chesum err, need re_calibration\n",
-						mmc_hostname(mmc));
-				}
-			} else {
-				pr_info("%s:version wrong, need calibration\n",
-							mmc_hostname(mmc));
-				pdata->need_cali = 1;
-			}
+		pdata->need_cali = 1;
 
-		if (pdata->need_cali == 1)
-			aml_sd_emmc_execute_tuning_index(mmc, 18,
+		aml_sd_emmc_execute_tuning_index(mmc, 18,
 						&tuning_data, start_blk);
-		else
-			sd_emmc_regs->gdelay = read_buf[2];
 		err = 0;
 		sd_emmc_regs->gclock = clk_temp;
 		pdata->clkc = clk_temp;
@@ -645,7 +590,6 @@ static int aml_sd_emmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 					(!!(clk_rate % (clk_temp & 0x3f)));
 		if (sd_emmc_regs->gcfg & (1 << 2))
 			pdata->mmc->actual_clock = pdata->mmc->actual_clock / 2;
-		kfree(read_buf);
 	}
 #endif
 

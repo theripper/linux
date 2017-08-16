@@ -88,7 +88,7 @@ module_param(vid_limit, uint, 0644);
 MODULE_PARM_DESC(vid_limit, "capture memory limit in megabytes");
 
 static unsigned int freerun_mode;
-module_param(freerun_mode, uint, 0664);
+module_param(freerun_mode, uint, 0666);
 MODULE_PARM_DESC(freerun_mode, "av synchronization int kernel");
 
 struct vframe_s *ppmgrvf = NULL;

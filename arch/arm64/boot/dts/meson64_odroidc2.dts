@@ -42,6 +42,12 @@
                         &clk800_cfg>;
 	};
 
+	gpiomem {
+		compatible = "amlogic,meson-gpiomem";
+		reg = <0x0 0xc8834000 0x0 0x1000>;
+		status = "okay";
+	};
+
 	memory@00000000 {
                 device_type = "memory";
                 linux,usable-memory = <0x0 0x1000000 0x0 0x7f000000>;
@@ -107,6 +113,14 @@
 			size = <0x0 0x4100000>;
 			alignment = <0x0 0x100000>;
                         //no-map;
+		};
+
+		jpegenc_cma_reserved:linux,jpegenc_cma {
+			compatible = "shared-dma-pool";
+			linux,phandle = <3>;
+			reusable;
+			size = <0x0 0x2400000>;
+			alignment = <0x0 0x400000>;
 		};
 	};
 
@@ -192,6 +206,7 @@
                 interrupt-names = "macirq";
                 clocks = <&clock CLK_81>;
                 clock-names = "ethclk81";
+				max-frame-size = <3582>;
         };
 
 	mesonstream {
@@ -289,6 +304,16 @@
 		compatible = "amlogic, amvenc_avc";
 		//memory-region = <&amvenc_avc_reserved>;
 		dev_name = "amvenc_avc";
+		status = "okay";
+		interrupts = <0 45 1>;
+		interrupt-names = "mailbox_2";
+	};
+
+	jpegenc{
+		compatible = "amlogic, jpegenc";
+		//memory-region = <&jpegenc_reserved>;
+		memory-region = <&jpegenc_cma_reserved>;
+		dev_name = "jpegenc";
 		status = "okay";
 		interrupts = <0 45 1>;
 		interrupt-names = "mailbox_2";
@@ -805,6 +830,17 @@
                 status = "ok";
         };
 
+	gpio_keypad{
+		compatible = "amlogic, gpio_keypad";
+		status = "okay";
+		scan_period = <20>;
+		key_num = <1>;
+		key_name = "power";
+		key_code = <116>;
+		irq_keyup = <6>;
+		irq_keydown = <7>;
+		reg = <0x0 0xc8100000 0x0 0x200>;
+	};
 };
 
 &i2c_a {

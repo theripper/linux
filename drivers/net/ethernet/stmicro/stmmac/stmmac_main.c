@@ -2712,6 +2712,8 @@ static int stmmac_rx(struct stmmac_priv *priv, int limit)
 			int frame_len;
 
 			frame_len = priv->hw->desc->get_rx_frame_len(p, coe);
+			if(frame_len > priv->plat->maxmtu) 
+				break;
 
 			/* ACS is set; GMAC core strips PAD/FCS for IEEE 802.3
 			 * Type frames (LLC/LLC-SNAP)

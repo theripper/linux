@@ -325,9 +325,9 @@ static struct hdmitx_clk hdmitx_clk[] = {
 	{HDMI_1280x720p60_16x9, 24000, 742500, 148500, 148500, -1, 74250},
 	{HDMI_1280x720p50_16x9, 24000, 742500, 148500, 148500, -1, 74250},
 	{HDMI_720x576p50_16x9, 24000, 270000, 54000, 54000, -1, 27000},
-	{HDMI_720x576i50_16x9, 24000, 270000, 54000, -1, 54000, 27000},
+	{HDMI_720x576i50_16x9, 24000, 270000, 54000, -1, 27000, 27000},
 	{HDMI_720x480p60_16x9, 24000, 270000, 54000, 54000, -1, 27000},
-	{HDMI_720x480i60_16x9, 24000, 270000, 54000, -1, 54000, 27000},
+	{HDMI_720x480i60_16x9, 24000, 270000, 54000, -1, 27000, 27000},
 	{HDMI_3840x2160p24_16x9, 24000, 2970000, 297000, 297000, -1, 297000},
 	{HDMI_3840x2160p25_16x9, 24000, 2970000, 297000, 297000, -1, 297000},
 	{HDMI_3840x2160p30_16x9, 24000, 2970000, 297000, 297000, -1, 297000},
@@ -343,6 +343,7 @@ static struct hdmitx_clk hdmitx_clk[] = {
 	/* pll setting for VESA modes */
 	{HDMIV_640x480p60hz, 24000, 252000, 25200, 25200, -1, 25200},
 	{HDMIV_800x480p60hz, 24000, 297600, 29760, 29760, -1, 29760},
+	{HDMIV_480x800p60hz, 24000, 320000, 32000, 32000, -1, 32000},
 	{HDMIV_800x600p60hz, 24000, 398000, 39800, 39800, -1, 39800},
 	{HDMIV_1024x600p60hz, 24000, 518300, 51830, 51830, -1, 51830},
 	{HDMIV_1024x768p60hz, 24000, 650000, 65000, 65000, -1, 65000},
@@ -1401,6 +1402,22 @@ static void hdmi_tvenc_set(struct hdmitx_vidpara *param)
 		SOF_LINES           = 10;
 		TOTAL_FRAMES        = 4;
 		break;
+	case HDMIV_480x800p60hz:
+		INTERLACE_MODE      = 0;
+		PIXEL_REPEAT_VENC   = 0;
+		PIXEL_REPEAT_HDMI   = 0;
+		ACTIVE_PIXELS       = 480;
+		ACTIVE_LINES        = 800;
+		LINES_F0            = 845;
+		LINES_F1            = 845;
+		FRONT_PORCH         = 40;
+		HSYNC_PIXELS        = 48;
+		BACK_PORCH          = 40;
+		EOF_LINES           = 13;
+		VSYNC_LINES         = 3;
+		SOF_LINES           = 29;
+		TOTAL_FRAMES        = 4;
+		break;
 	case HDMIV_1024x600p60hz:
 		INTERLACE_MODE      = 0;
 		PIXEL_REPEAT_VENC   = 0;
@@ -1796,6 +1813,7 @@ static void hdmi_tvenc_set(struct hdmitx_vidpara *param)
 		hd_set_reg_bits(P_VPU_HDMI_SETTING, 1, 1, 1);
 		break;
 	case HDMIV_640x480p60hz:
+	case HDMIV_480x800p60hz:
 		hd_write_reg(P_VPU_HDMI_SETTING, (0 << 0) |
 				(0 << 1) |
 				(0 << 2) |
@@ -1818,6 +1836,33 @@ static void hdmi_tvenc_set(struct hdmitx_vidpara *param)
 				(1 << 8) |
 				(0 << 12)
 		);
+		hd_set_reg_bits(P_VPU_HDMI_SETTING, 1, 1, 1);
+		break;
+	case HDMIV_CUSTOMBUILT:
+		if (((ACTIVE_PIXELS == 640)
+				&& (ACTIVE_LINES == 480))
+			|| ((ACTIVE_PIXELS == 480)
+				&& (ACTIVE_LINES == 800))) {
+			hd_write_reg(P_VPU_HDMI_SETTING, (0 << 0) |
+					(0 << 1) |
+					(0 << 2) |
+					(0 << 3) |
+					(0 << 4) |
+					(4 << 5) |
+					(0 << 8) |
+					(0 << 12)
+			);
+		} else {
+			hd_write_reg(P_VPU_HDMI_SETTING, (0 << 0) |
+					(0 << 1) | /* [	1] src_sel_encp */
+					(HSYNC_POLARITY << 2) |
+					(VSYNC_POLARITY << 3) |
+					(0 << 4) |
+					(4 << 5) |
+					(0 << 8) |
+					(0 << 12)
+			);
+		}
 		hd_set_reg_bits(P_VPU_HDMI_SETTING, 1, 1, 1);
 		break;
 	default:

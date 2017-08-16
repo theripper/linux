@@ -34,15 +34,11 @@ MODULE_LICENSE("GPL");
 
 static int rtl8211f_config_init(struct phy_device *phydev)
 {
-	int val;
 /* we want to disable eee */
 	phy_write(phydev, RTL8211F_MMD_CTRL, 0x7);
 	phy_write(phydev, RTL8211F_MMD_DATA, 0x3c);
 	phy_write(phydev, RTL8211F_MMD_CTRL, 0x4007);
 	phy_write(phydev, RTL8211F_MMD_DATA, 0x0);
-/* disable 1000m adv*/
-	val = phy_read(phydev, 0x9);
-	phy_write(phydev, 0x9, val&(~(1<<9)));
   /* rx reg 21 bit 3 tx reg 17 bit 8*/
 	/*phy_write(phydev, 0x1f, 0xd08);
 	val =  phy_read(phydev, 0x15);
